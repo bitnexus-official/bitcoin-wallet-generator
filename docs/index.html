@@ -2,8 +2,23 @@
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
+    <!--
+      "이 페이지에서 밖으로 나가는 것이 없다"를 코드 검토가 아니라 브라우저가
+      강제하게 만든다. connect-src 'none' 이 fetch/XMLHttpRequest/WebSocket/
+      sendBeacon 을 전부 막고, default-src 'none' 이 외부 스크립트·이미지 로딩을
+      막는다. 어떤 경로로든 코드가 주입돼 시드를 알아내도 내보낼 통로가 없다.
+      인라인 script/style 은 이 파일이 전부 인라인이라 허용해야 한다.
+      frame-ancestors 는 meta 로는 무시되는 지시어라 여기 넣지 않는다.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
+    <!-- 브라우저가 favicon.ico 를 자동으로 요청하지 않게 해서 불필요한 외부
+         요청과 CSP 위반 로그를 없앤다. -->
+    <link rel="icon" href="data:," />
     <title>비트코인 개인지갑 생성기</title>
     <style>
       html {
@@ -23,8 +38,7 @@
         margin: 0 auto;
         padding: 0 2px;
       }
-      /* 내려받아 파일로 열었을 때만 제목을 보여준다. iframe 안에서는 아임웹 쪽에
-         이미 제목이 있으므로 중복을 피한다. */
+      /* iframe 안에서는 아임웹 쪽에 이미 제목이 있으므로 숨긴다. */
       .page-head {
         display: none;
         padding: 24px 0 4px;
@@ -34,18 +48,12 @@
         margin: 0;
         font-size: 22px;
       }
-      .page-head p {
-        margin: 4px 0 0;
-        font-size: 13px;
-        color: #6b7280;
-      }
     </style>
   </head>
   <body>
     <div class="page">
       <div class="page-head" id="pageHead">
         <h1>비트코인 개인지갑 생성기</h1>
-        <p>오프라인 실행용 파일</p>
       </div>
 <style>
   .wallet-generator * {
@@ -593,95 +601,6 @@
     flex-shrink: 0;
   }
 
-  /* 오프라인 생성 안내 (온라인 접속 시) */
-  .wallet-generator .offline-box {
-    background: #f0f5fc;
-    border: 1px solid #c5d9f0;
-    border-left: 4px solid #0d6efd;
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 16px;
-    font-size: 14px;
-    color: #333;
-    line-height: 1.65;
-  }
-
-  .wallet-generator .offline-summary {
-    font-weight: 700;
-    cursor: pointer;
-    list-style: none;
-  }
-
-  /* 사파리/크롬의 기본 삼각형 마커를 지우고 직접 그린다 */
-  .wallet-generator .offline-summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .wallet-generator .offline-summary::before {
-    content: "＋";
-    display: inline-block;
-    width: 1.1em;
-    font-weight: 700;
-  }
-
-  .wallet-generator .offline-box[open] .offline-summary::before {
-    content: "－";
-  }
-
-  .wallet-generator .offline-body {
-    margin-top: 10px;
-  }
-
-  .wallet-generator .offline-steps {
-    padding-left: 18px;
-    margin-bottom: 14px;
-  }
-
-  .wallet-generator .offline-steps li {
-    margin-bottom: 6px;
-  }
-
-  .wallet-generator .offline-link {
-    display: block;
-    text-align: center;
-    padding: 13px;
-    background: #0d6efd;
-    color: #fff;
-    border-radius: 8px;
-    font-weight: 700;
-    text-decoration: none;
-  }
-
-  .wallet-generator .offline-note {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid #d8e6f6;
-    font-size: 12px;
-    color: #495057;
-    line-height: 1.65;
-  }
-
-  /* 오프라인(file://) 실행이 확인된 경우 */
-  .wallet-generator .offline-badge {
-    background: #eaf7ee;
-    border: 1px solid #b7e2c4;
-    border-left: 4px solid #1a7f37;
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 16px;
-    font-size: 14px;
-    color: #14532d;
-    line-height: 1.65;
-  }
-
-  /* 오프라인 파일인데 아직 인터넷에 연결되어 있는 경우 */
-  .wallet-generator .offline-badge.is-online {
-    background: #fff8e6;
-    border-color: #f0d38a;
-    border-left-color: #b45309;
-    color: #8a5a00;
-  }
-
   /* 생성을 진행하면 안 되는 실행 환경 (카카오톡 인앱 브라우저 등) */
   .wallet-generator .env-warn {
     background: #fdecec;
@@ -802,55 +721,6 @@
       선택한 뒤 다시 시도해 주세요.
     </div>
 
-    <!-- 고액 보관용 오프라인 경로. 일반 사용자는 아래에서 그대로 만들면 되므로
-         기본은 접어 두고 필요한 사람만 펼쳐 본다. 링크는 이 파일과 같은 출처의
-         index.html 을 그대로 내려받게 해서, 별도 주소 관리가 필요 없다. -->
-    <details class="offline-box" id="offlineBox">
-      <summary class="offline-summary">
-        큰 금액을 보관할 계획이라면: 인터넷을 끊고 만드는 방법
-      </summary>
-      <div class="offline-body">
-        이 화면은 접속할 때마다 서버에서 새로 내려받은 코드로 동작합니다. 아래
-        방법으로 만들면 내려받는 시점 한 번만 확인하면 되고, 만드는 동안에는 이
-        기기 밖으로 아무것도 나가지 않습니다. PC에서 진행하시는 편이 수월합니다.
-        <ol class="offline-steps">
-          <li>아래 버튼으로 생성기 파일을 내려받습니다.</li>
-          <li>
-            기기의 인터넷 연결을 끊습니다. (비행기 모드 또는 Wi-Fi·데이터 끄기)
-          </li>
-          <li>
-            내려받은 <strong>wallet-offline.html</strong> 파일을 열어 지갑을
-            만듭니다.
-          </li>
-        </ol>
-        <a
-          class="offline-link"
-          id="offlineDownloadLink"
-          href="index.html"
-          download="wallet-offline.html"
-          >생성기 파일 내려받기</a
-        >
-        <p class="offline-note">
-          <span class="footnote-star">※</span>내려받은 파일의 SHA-256 값이 공개된
-          값과 같은지 확인하면 파일이 중간에 바뀌지 않았음을 검증할 수 있습니다.
-          확인 방법은 macOS 터미널에서
-          <strong>shasum -a 256 wallet-offline.html</strong>, Windows 명령
-          프롬프트에서
-          <strong>certutil -hashfile wallet-offline.html SHA256</strong>
-          입니다. 비교할 값은
-          <a href="SHA256.txt" target="_blank" rel="noopener noreferrer"
-            >SHA256.txt</a
-          >에 있습니다.
-        </p>
-      </div>
-    </details>
-
-    <!-- 오프라인(file://) 실행이 확인된 경우에만 노출 -->
-    <div class="offline-badge hidden-section" id="offlineBadge">
-      내려받은 파일로 실행 중입니다. 지갑을 만들기 전에 인터넷 연결이 꺼져
-      있는지 다시 확인해 주세요.
-    </div>
-
     <!-- 지갑 생성 전 안내 (제목 바로 아래) -->
     <div class="consent-box" aria-labelledby="consentInlineTitle">
       <div class="section-title" id="consentInlineTitle">
@@ -872,7 +742,6 @@
           <strong>안전한 환경 권고</strong><br />
           지갑 생성 전에 악성코드 감염, 루팅/탈옥, 원격제어 앱, 화면 녹화/캡처,
           키로거 등이 없는 신뢰 가능한 기기·네트워크에서 실행해야 합니다.
-          가능하면 오프라인/비행기 모드에서 생성하시길 권장합니다.
         </li>
       </ol>
     </div>
@@ -2738,12 +2607,9 @@
     let canRevealPrivate = false;
     let canRevealMnemonic = false;
 
-    // 실행 환경 판정. 카카오톡 인앱 브라우저는 지갑 정보 파일이 공유 시트를 거쳐
-    // 대화방으로 전송되기 쉬워(=시드가 카카오 서버에 평문으로 남는다) 생성 자체를
-    // 막는다. file:// 로 열렸다면 내려받은 파일로 오프라인 실행 중이라는 뜻이므로
-    // 다운로드 안내 대신 확인 배지를 보여준다.
+    // 카카오톡 인앱 브라우저는 지갑 정보 파일이 공유 시트를 거쳐 대화방으로
+    // 전송되기 쉬워(=시드가 카카오 서버에 평문으로 남는다) 생성 자체를 막는다.
     const isKakaoInApp = /KAKAOTALK/i.test(navigator.userAgent);
-    const isOfflineRun = location.protocol === "file:";
 
     const BIP39_WORDS = [
       "abandon",
@@ -5826,18 +5692,22 @@
       // document.body에 바로 붙이면 스타일이 전혀 적용되지 않고(투명/비정상 위치),
       // 화면에 안 보이는 채로 클릭만 계속 가로채는 상태가 된다. 호스트 페이지의
       // CSS와 무관하게 항상 정확히 보이도록 인라인 스타일로 직접 그린다.
+      // width:100% + padding 조합에 box-sizing 이 없으면 오버레이가 화면보다
+      // 40px 넓어져 가로 스크롤이 생기고, 모달이 오른쪽으로 쏠려 보인다.
+      // inset:0 + border-box 로 뷰포트에 정확히 맞춘다.
       const overlay = document.createElement("div");
       overlay.style.cssText =
-        "position:fixed;top:0;left:0;width:100%;height:100%;" +
+        "position:fixed;inset:0;margin:0;padding:20px;box-sizing:border-box;" +
+        "width:auto;height:auto;max-width:100%;max-height:100%;" +
         "background:rgba(0,0,0,0.6);display:flex;align-items:center;" +
-        "justify-content:center;padding:20px;z-index:2147483647;";
+        "justify-content:center;z-index:2147483647;overflow:auto;";
 
       const modal = document.createElement("div");
       modal.style.cssText =
         "background:#fff;border-radius:16px;max-width:460px;width:100%;" +
         "box-shadow:0 20px 60px rgba(0,0,0,0.35);overflow:hidden;" +
         "font-family:inherit;padding:28px;box-sizing:border-box;" +
-        "word-break:keep-all;overflow-wrap:break-word;";
+        "word-break:keep-all;overflow-wrap:break-word;margin:auto;flex-shrink:0;";
 
       const title = document.createElement("div");
       title.textContent = "파일이 정상적으로 저장되었나요?";
@@ -5906,7 +5776,11 @@
       modal.appendChild(copyNote);
       modal.appendChild(footer);
       overlay.appendChild(modal);
-      document.body.appendChild(overlay);
+      // 호스트(아임웹)가 body 직계 자식에 주는 여백·정렬 규칙을 피하려고
+      // 생성기 루트 안에 붙인다. position:fixed 는 그대로 뷰포트 기준이다.
+      const host =
+        document.querySelector(".wallet-generator") || document.body;
+      host.appendChild(overlay);
 
       confirmBtn.addEventListener("click", () => {
         overlay.remove();
@@ -6199,29 +6073,6 @@ Do not share the mnemonic phrase or private key with others. The private key was
       }
     }
 
-    // 실행 환경에 맞는 안내만 노출
-    if (isOfflineRun) {
-      const offlineBox = document.getElementById("offlineBox");
-      const offlineBadge = document.getElementById("offlineBadge");
-      if (offlineBox) offlineBox.classList.add("hidden-section");
-      if (offlineBadge) {
-        offlineBadge.classList.remove("hidden-section");
-        // navigator.onLine 은 "네트워크에 붙어 있는지"만 알려주므로 인터넷이
-        // 실제로 되는지까지 보장하지는 못한다. 다만 비행기 모드나 Wi-Fi·데이터
-        // 끄기는 확실히 잡아내므로, 안내만 하는 대신 현재 상태를 보여준다.
-        // 오탐으로 생성을 막아버리면 오히려 저장을 못 하게 되므로 차단은 안 한다.
-        const showNetState = () => {
-          const isOff = navigator.onLine === false;
-          offlineBadge.classList.toggle("is-online", !isOff);
-          offlineBadge.textContent = isOff
-            ? "인터넷 연결이 꺼져 있습니다. 이 상태에서 지갑을 만드세요."
-            : "아직 인터넷에 연결되어 있습니다. 비행기 모드를 켜거나 Wi-Fi·데이터를 끈 뒤 진행해 주세요.";
-        };
-        showNetState();
-        window.addEventListener("online", showNetState);
-        window.addEventListener("offline", showNetState);
-      }
-    }
     if (isKakaoInApp) {
       const envWarn = document.getElementById("envWarn");
       if (envWarn) envWarn.classList.remove("hidden-section");
