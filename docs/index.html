@@ -36,7 +36,8 @@
       .page {
         max-width: 720px;
         margin: 0 auto;
-        padding: 0 2px;
+        padding: 0 8px;
+        overflow: visible;
       }
     </style>
   </head>
@@ -55,6 +56,7 @@
     margin: 30px 0;
     width: 100%;
     word-break: keep-all !important;
+    overflow: visible;
   }
 
   .wallet-generator .container {
@@ -170,7 +172,7 @@
     font-weight: 500;
     white-space: normal;
     width: 260px;
-    max-width: calc(100vw - 60px);
+    max-width: min(260px, calc(100vw - 24px));
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     z-index: 1000;
@@ -6046,11 +6048,40 @@ Do not share the mnemonic phrase or private key with others. The private key was
       let hideTimeout;
       let open = false;
 
+      const placePopup = () => {
+        // 기본은 ? 중앙 정렬. 화면/생성기 밖으로 나가면 화살표는 그대로 두고
+        // 말풍선만 좌우로 밀어 넣는다.
+        popup.style.left = "50%";
+        popup.style.right = "auto";
+        popup.style.transform = "translateX(-50%)";
+
+        const root =
+          document.querySelector(".wallet-generator") || document.body;
+        const pad = 8;
+        const popRect = popup.getBoundingClientRect();
+        const rootRect = root.getBoundingClientRect();
+
+        let shift = 0;
+        const minLeft = Math.max(pad, rootRect.left + pad);
+        const maxRight = Math.min(
+          window.innerWidth - pad,
+          rootRect.right - pad,
+        );
+
+        if (popRect.left < minLeft) shift = minLeft - popRect.left;
+        else if (popRect.right > maxRight) shift = maxRight - popRect.right;
+
+        if (shift !== 0) {
+          popup.style.transform = "translateX(calc(-50% + " + shift + "px))";
+        }
+      };
+
       const show = () => {
         clearTimeout(hideTimeout);
         popup.classList.add("show");
         if (arrow) arrow.classList.add("show");
         open = true;
+        requestAnimationFrame(placePopup);
       };
 
       const hide = () => {
@@ -6074,6 +6105,8 @@ Do not share the mnemonic phrase or private key with others. The private key was
       bindOnce(popup, "mouseleave", hide);
 
       bindOnce(tooltip, "click", function (e) {
+        // 말풍선 안 링크 클릭은 그대로 열리게 둔다.
+        if (e.target && e.target.closest && e.target.closest("a")) return;
         e.preventDefault();
         e.stopPropagation();
         if (open) hideNow();
