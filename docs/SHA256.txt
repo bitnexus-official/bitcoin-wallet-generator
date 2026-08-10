@@ -1,0 +1,2 @@
+wallet-offline.html (= index.html)
+8552e5e96f4c5d318793daea238e26abfbb6498282be23f190c4c6d118b0f399
