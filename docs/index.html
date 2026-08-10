@@ -38,23 +38,10 @@
         margin: 0 auto;
         padding: 0 2px;
       }
-      /* iframe 안에서는 아임웹 쪽에 이미 제목이 있으므로 숨긴다. */
-      .page-head {
-        display: none;
-        padding: 24px 0 4px;
-        text-align: center;
-      }
-      .page-head h1 {
-        margin: 0;
-        font-size: 22px;
-      }
     </style>
   </head>
   <body>
     <div class="page">
-      <div class="page-head" id="pageHead">
-        <h1>비트코인 개인지갑 생성기</h1>
-      </div>
 <style>
   .wallet-generator * {
     margin: 0;
@@ -559,6 +546,13 @@
     line-height: 1.65;
   }
 
+  /* 첫 각주 아래 이어서 붙는 추가 안내. 가로줄 없이 여백만 둔다. */
+  .wallet-generator .warning-footnote + .warning-footnote {
+    margin-top: 10px;
+    padding-top: 0;
+    border-top: none;
+  }
+
   .wallet-generator .footnote-star {
     display: inline-block;
     margin-inline-end: 0.12em;
@@ -617,24 +611,6 @@
   .wallet-generator .env-warn strong {
     display: block;
     margin-bottom: 5px;
-  }
-
-  .wallet-generator .wipe-btn {
-    width: 100%;
-    padding: 13px;
-    margin-top: 10px;
-    background: transparent;
-    color: #6b7280;
-    border: 1px solid #ced4da;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .wallet-generator .wipe-btn:disabled {
-    color: #adb5bd;
-    cursor: not-allowed;
   }
 
   /* Consent modal */
@@ -743,6 +719,11 @@
           지갑 생성 전에 악성코드 감염, 루팅/탈옥, 원격제어 앱, 화면 녹화/캡처,
           키로거 등이 없는 신뢰 가능한 기기·네트워크에서 실행해야 합니다.
         </li>
+        <li>
+          <strong>무상 제공 기능</strong><br />
+          이 기능은 제품 이용의 편의를 위해 무상으로 제공되며, 회사는 지갑
+          관리나 자산 보관 서비스를 제공하지 않습니다.
+        </li>
       </ol>
     </div>
 
@@ -773,17 +754,22 @@
         없습니다.</span
       >
       <p class="warning-footnote">
-        <span class="footnote-star">※</span>저장되는 파일은 실행 기능이 없는
-        단순 텍스트(.txt)이지만, 니모닉과 비밀키가 암호화 없이 그대로 담깁니다.
-        다운로드 폴더가 iCloud·구글 드라이브 등으로 자동 동기화되고 있다면
-        동기화 대상에서 제외해 주세요. 또한 이 파일을 메신저나 메일로 보내지
-        마세요. 보내는 순간 해당 업체 서버에 내용이 그대로 남습니다.
+        <span class="footnote-star">※</span>저장되는 파일은 실행 코드가 없는
+        단순 텍스트(.txt) 파일로, 파일 자체에 악성코드가 포함되어 있지 않습니다.
+        다만 니모닉과 비밀키가 암호화되지 않은 상태로 그대로 저장되므로 파일
+        보관에 각별히 주의해 주세요.
       </p>
       <p class="warning-footnote">
-        <span class="footnote-star">※</span>이 지갑은 웹 브라우저에서
-        만들어지므로 하드웨어 지갑만큼 안전하지는 않습니다. 채굴 보상을 받은
-        뒤에는 가능한 한 빨리 하드웨어 지갑 등 더 안전한 지갑으로 옮기시고, 이
-        지갑을 장기 보관용으로 사용하지 마세요.
+        <span class="footnote-star">※</span>다운로드 폴더가 iCloud·구글 드라이브
+        등에 자동 동기화되고 있다면 동기화 대상에서 제외해 주세요. 또한 이
+        파일을 메신저나 이메일로 보내지 마세요. 전송하는 순간 해당 서비스 서버에
+        파일 내용이 그대로 남습니다.
+      </p>
+      <p class="warning-footnote">
+        <span class="footnote-star">※</span>이 지갑은 웹 브라우저에서 생성되므로
+        하드웨어 지갑만큼 안전하지는 않습니다. 보관 금액이 커질 경우 하드웨어
+        지갑 등 더 안전한 지갑으로 옮기시길 권장하며, 장기 보관용으로는 적합하지
+        않습니다.
       </p>
     </div>
 
@@ -955,9 +941,6 @@
       </div>
 
       <button class="download-btn" id="downloadBtn">지갑 정보 저장</button>
-      <button class="wipe-btn hidden-section" id="wipeBtn">
-        니모닉·비밀키를 화면에서 지우기
-      </button>
     </div>
   </div>
 </div>
@@ -5778,8 +5761,7 @@
       overlay.appendChild(modal);
       // 호스트(아임웹)가 body 직계 자식에 주는 여백·정렬 규칙을 피하려고
       // 생성기 루트 안에 붙인다. position:fixed 는 그대로 뷰포트 기준이다.
-      const host =
-        document.querySelector(".wallet-generator") || document.body;
+      const host = document.querySelector(".wallet-generator") || document.body;
       host.appendChild(overlay);
 
       confirmBtn.addEventListener("click", () => {
@@ -5817,9 +5799,6 @@
         const privateAddressSpan = document.getElementById("privateAddress");
         if (eyeIcon) eyeIcon.classList.remove("disabled");
         if (privateAddressSpan) privateAddressSpan.title = "클릭하여 표시";
-
-        const wipeBtn = document.getElementById("wipeBtn");
-        if (wipeBtn) wipeBtn.classList.remove("hidden-section");
       }
 
       // 다운로드 이후 퍼블릭 주소 블러 해제
@@ -6012,44 +5991,6 @@ Do not share the mnemonic phrase or private key with others. The private key was
       attemptDownload();
     });
 
-    // 저장을 마친 뒤 니모닉/비밀키를 화면과 변수에서 치운다. JS에서 메모리를 완전히
-    // 비우는 것은 불가능하지만, 페이지가 열려 있는 동안 계속 상주하는 것보다는 낫다.
-    // 공개 주소는 채굴 풀에 등록해야 하므로 남겨 둔다.
-    bindOnce(document.getElementById("wipeBtn"), "click", function () {
-      currentMnemonic = "";
-      currentPrivateKey = "";
-      canRevealMnemonic = false;
-      canRevealPrivate = false;
-      isMnemonicVisible = false;
-      isPrivateKeyVisible = false;
-
-      const wordsGrid = document.getElementById("wordsGrid");
-      if (wordsGrid) {
-        wordsGrid.classList.remove("is-blurred");
-        wordsGrid.removeAttribute("style");
-        wordsGrid.textContent = "화면에서 삭제되었습니다.";
-        wordsGrid.title = "";
-      }
-      const mnemonicBox = document.querySelector(".mnemonic-words");
-      if (mnemonicBox) mnemonicBox.style.height = "auto";
-
-      const privateAddressSpan = document.getElementById("privateAddress");
-      if (privateAddressSpan) {
-        privateAddressSpan.classList.remove("private-key-blurred");
-        privateAddressSpan.removeAttribute("style");
-        privateAddressSpan.textContent = "화면에서 삭제되었습니다.";
-        privateAddressSpan.title = "";
-      }
-
-      const mnemonicEyeIcon = document.getElementById("mnemonicEyeIcon");
-      if (mnemonicEyeIcon) mnemonicEyeIcon.classList.add("disabled");
-      const eyeIcon = document.getElementById("eyeIcon");
-      if (eyeIcon) eyeIcon.classList.add("disabled");
-
-      this.disabled = true;
-      this.textContent = "화면에서 삭제되었습니다";
-    });
-
     // iframe 으로 삽입된 경우, 부모 페이지가 스크롤바 없이 전체를 보여줄 수 있도록
     // 높이만 알려준다. 부모는 다른 출처라 이 안을 들여다볼 수 없고, 여기서도 높이
     // 숫자 외에는 아무것도 보내지 않는다. (부모 출처를 미리 알 수 없어 "*" 를 쓰지만,
@@ -6134,10 +6075,5 @@ Do not share the mnemonic phrase or private key with others. The private key was
 </script>
 
     </div>
-    <script>
-      if (window.parent === window) {
-        document.getElementById("pageHead").style.display = "block";
-      }
-    </script>
   </body>
 </html>
