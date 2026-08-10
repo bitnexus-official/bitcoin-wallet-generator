@@ -112,6 +112,9 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
   }
 
   .wallet-generator .tag-badge {
@@ -152,6 +155,7 @@
     cursor: help;
     text-transform: none;
     letter-spacing: 0;
+    -webkit-tap-highlight-color: transparent;
   }
   .wallet-generator .tooltip-popup {
     position: absolute;
@@ -169,10 +173,11 @@
     max-width: calc(100vw - 60px);
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 100;
+    z-index: 1000;
     line-height: 1.5;
     display: none;
     pointer-events: auto;
+    box-sizing: border-box;
   }
 
   .wallet-generator .tooltip-popup.show {
@@ -190,7 +195,7 @@
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
     border-bottom: 8px solid #333;
-    z-index: 101;
+    z-index: 1001;
     display: none;
   }
 
@@ -214,7 +219,7 @@
     border-radius: 10px;
     padding: 15px;
     margin-bottom: 20px;
-    border: 2px solid #e9ecef;
+    border: 1px solid #e9ecef;
     min-height: 200px;
     display: flex;
     flex-direction: column;
@@ -261,7 +266,7 @@
     border-radius: 10px;
     padding: 15px;
     margin-bottom: 15px;
-    border: 2px solid #e9ecef;
+    border: 1px solid #e9ecef;
     word-break: break-all;
     overflow: hidden;
   }
@@ -778,8 +783,11 @@
             class="title-tooltip"
             id="mnemonicTooltip"
             data-tooltip-type="mnemonic"
-            >?<span class="tooltip-arrow"></span>
-            <div class="tooltip-popup"></div
+            role="button"
+            tabindex="0"
+            aria-label="니모닉 안내"
+            >?<span class="tooltip-arrow" aria-hidden="true"></span
+            ><span class="tooltip-popup"></span
           ></span>
         </div>
         <!-- data-dd-action-name / data-dd-privacy: 아임웹이 사이트 전역에 붙이는
@@ -851,12 +859,15 @@
 
       <div class="wallet-section">
         <div class="section-title">
-          <span class="tag-badge tag-danger">노출금지</span> 비밀 키<span
+          <span class="tag-badge tag-danger">노출금지</span> 비밀           키<span
             class="title-tooltip"
             id="rootKeyTooltip"
             data-tooltip-type="rootkey"
-            >?<span class="tooltip-arrow"></span>
-            <div class="tooltip-popup"></div
+            role="button"
+            tabindex="0"
+            aria-label="비밀키 안내"
+            >?<span class="tooltip-arrow" aria-hidden="true"></span
+            ><span class="tooltip-popup"></span
           ></span>
         </div>
         <div class="address-box">
@@ -6020,37 +6031,74 @@ Do not share the mnemonic phrase or private key with others. The private key was
       genBtn.disabled = isKakaoInApp || !this.checked;
     });
 
-    // 툴팁 기능
+    // 툴팁: span 안에 div 를 넣으면 브라우저가 DOM 을 고쳐 팝업이 빠져나가
+    // querySelector 가 실패한다. 팝업도 span 으로 두고, 모바일은 탭으로 연다.
     const initTooltip = (tooltipId, content) => {
       const tooltip = document.getElementById(tooltipId);
       if (!tooltip) return;
 
       const popup = tooltip.querySelector(".tooltip-popup");
       const arrow = tooltip.querySelector(".tooltip-arrow");
+      if (!popup) return;
 
-      if (popup) {
-        popup.innerHTML = content;
-      }
+      popup.innerHTML = content;
 
       let hideTimeout;
+      let open = false;
 
       const show = () => {
         clearTimeout(hideTimeout);
-        if (popup) popup.classList.add("show");
+        popup.classList.add("show");
         if (arrow) arrow.classList.add("show");
+        open = true;
       };
 
       const hide = () => {
         hideTimeout = setTimeout(() => {
-          if (popup) popup.classList.remove("show");
+          popup.classList.remove("show");
           if (arrow) arrow.classList.remove("show");
-        }, 200);
+          open = false;
+        }, 150);
+      };
+
+      const hideNow = () => {
+        clearTimeout(hideTimeout);
+        popup.classList.remove("show");
+        if (arrow) arrow.classList.remove("show");
+        open = false;
       };
 
       bindOnce(tooltip, "mouseenter", show);
       bindOnce(tooltip, "mouseleave", hide);
       bindOnce(popup, "mouseenter", show);
       bindOnce(popup, "mouseleave", hide);
+
+      bindOnce(tooltip, "click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (open) hideNow();
+        else show();
+      });
+
+      bindOnce(tooltip, "keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (open) hideNow();
+          else show();
+        } else if (e.key === "Escape") {
+          hideNow();
+        }
+      });
+
+      // document 는 툴팁마다 키가 달라야 한다. 공용 click 키를 쓰면
+      // 두 번째 툴팁 바깥 클릭 닫기가 등록되지 않는다.
+      const docKey = "__walletTipDoc_" + tooltipId;
+      if (!document[docKey]) {
+        document[docKey] = true;
+        document.addEventListener("click", function (e) {
+          if (!tooltip.contains(e.target)) hideNow();
+        });
+      }
     };
 
     // 니모닉 툴팁 초기화
