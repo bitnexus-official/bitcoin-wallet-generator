@@ -5745,24 +5745,24 @@
         "주세요.</span>";
 
       const footer = document.createElement("div");
-      footer.style.cssText = "display:flex;gap:10px;";
+      footer.style.cssText = "display:flex;gap:10px;flex-wrap:nowrap;";
 
       const retryBtn = document.createElement("button");
       retryBtn.id = "saveRetryBtn";
       retryBtn.textContent = "다시 다운로드";
       retryBtn.style.cssText =
-        "flex:1;padding:14px 18px;background:transparent;color:#6b7280;" +
-        "border:1px solid #ced4da;border-radius:10px;font-weight:600;" +
-        "cursor:pointer;font-size:15px;";
+        "flex:1 1 0;min-width:0;padding:14px 10px;background:transparent;" +
+        "color:#6b7280;border:1px solid #ced4da;border-radius:10px;" +
+        "font-weight:600;cursor:pointer;font-size:14px;white-space:nowrap;";
 
       const confirmBtn = document.createElement("button");
       confirmBtn.id = "saveConfirmBtn";
       confirmBtn.textContent = "네, 저장했습니다";
       confirmBtn.style.cssText =
-        "flex:1;padding:14px 18px;" +
+        "flex:1 1 0;min-width:0;padding:14px 10px;" +
         "background:linear-gradient(135deg,#28a745 0%,#1e7e34 50%,#155d27 100%);" +
         "color:#fff;border:none;border-radius:10px;font-weight:600;" +
-        "cursor:pointer;font-size:15px;";
+        "cursor:pointer;font-size:14px;white-space:nowrap;";
 
       footer.appendChild(retryBtn);
       footer.appendChild(confirmBtn);
