@@ -5449,8 +5449,13 @@
         });
       }
 
-      // 퍼블릭 주소 표시 (초기 블러 처리)
-      publicAddressDiv.textContent = currentPublicAddress;
+      // 퍼블릭 주소도 비밀키와 같이 실제 값 대신 마스킹(•)으로 보여 준다.
+      // 저장 확인 후에야 진짜 주소를 넣는다.
+      const pubMaskLen =
+        currentPublicAddress && currentPublicAddress.length
+          ? currentPublicAddress.length
+          : 42;
+      publicAddressDiv.textContent = "•".repeat(pubMaskLen);
       publicAddressDiv.classList.add("is-blurred");
 
       // 프라이빗 키 초기화 (실제 길이만큼 마스킹 표시)
@@ -5807,9 +5812,12 @@
         if (privateAddressSpan) privateAddressSpan.title = "클릭하여 표시";
       }
 
-      // 다운로드 이후 퍼블릭 주소 블러 해제
+      // 다운로드 이후 퍼블릭 주소 마스킹 해제
       const publicAddressEl = document.getElementById("publicAddress");
-      if (publicAddressEl) publicAddressEl.classList.remove("is-blurred");
+      if (publicAddressEl) {
+        publicAddressEl.textContent = currentPublicAddress || "";
+        publicAddressEl.classList.remove("is-blurred");
+      }
       const wordsGrid = document.getElementById("wordsGrid");
       // 니모닉 컨테이너 높이 유지를 위한 코드 (블러 해제는 하지 않음)
       const mnemonicBox = document.querySelector(".mnemonic-words");
