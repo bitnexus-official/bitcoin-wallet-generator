@@ -53,7 +53,10 @@
         .wallet-generator {
           position: relative;
           padding: 0;
-          margin: 30px 0;
+          /* 바깥 여백은 삽입하는 쪽(.wallet-embed)이 가진다. 여기도 30px을
+             주면 iframe 안팎으로 두 번 겹쳐 60px이 되고, 보고하는 높이도
+             그만큼 부풀려진다. */
+          margin: 0;
           width: 100%;
           word-break: keep-all !important;
           overflow: visible;
