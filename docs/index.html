@@ -445,6 +445,32 @@
           transform: none;
         }
 
+        .wallet-generator .wallet-help {
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid #e9ecef;
+        }
+
+        .wallet-generator .wallet-help p {
+          margin: 0 0 10px;
+          font-size: 14px;
+          line-height: 1.6;
+          color: #6c757d;
+        }
+
+        .wallet-generator .wallet-help a {
+          display: inline-block;
+          padding: 6px 0;
+          font-size: 14px;
+          font-weight: 700;
+          color: #0056b3;
+          text-decoration: none;
+        }
+
+        .wallet-generator .wallet-help a:hover {
+          text-decoration: underline;
+        }
+
         /* Public address layout */
         #publicAddress {
           flex: 1 1 auto;
@@ -990,6 +1016,20 @@
             <button class="download-btn" id="downloadBtn">
               지갑 정보 저장
             </button>
+
+            <div class="wallet-help">
+              <p>
+                저장한 지갑은 비트코인 지갑 앱에서 열어 채굴 보상을 확인하고
+                전송할 수 있습니다.
+              </p>
+              <a
+                href="https://www.bitnexus.co.kr/wallet-guide"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-dd-action-name="지갑 사용 안내"
+                >지갑 사용 안내 보기 (새 창) ›</a
+              >
+            </div>
           </div>
         </div>
       </div>
