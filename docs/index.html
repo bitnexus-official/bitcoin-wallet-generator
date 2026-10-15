@@ -761,6 +761,25 @@
             </ol>
           </div>
 
+          <!-- ===== 임시 진단용: 원인 확인 후 이 div 와 아래 uaDebug 스크립트를 함께 지운다 ===== -->
+          <div
+            id="uaDebug"
+            style="
+              margin-bottom: 14px;
+              padding: 10px 12px;
+              background: #f1f3f5;
+              border: 1px solid #dee2e6;
+              border-radius: 8px;
+              font-size: 11px;
+              line-height: 1.5;
+              color: #495057;
+              word-break: break-all;
+              white-space: pre-wrap;
+              user-select: all;
+              -webkit-user-select: all;
+            "
+          ></div>
+
           <!-- 지갑 생성 전 안내 (제목 바로 아래) -->
           <div class="consent-box" aria-labelledby="consentInlineTitle">
             <div class="section-title" id="consentInlineTitle">
@@ -2728,19 +2747,45 @@
           // 크롬·삼성 인터넷(진짜 브라우저)과 iOS(WKWebView)는 blob 을 직접
           // 저장하므로 해당 없음. 서버 없이 우회할 방법이 없어 생성을 막는다.
           //
-          // 'wv' 는 안드로이드 웹뷰 UA 토큰이다. 네이버 앱 일부 버전은 이 토큰
-          // 없이 NAVER(inapp 만 붙이므로 두 가지를 모두 본다. 크롬·삼성 인터넷·
-          // 웨일 같은 실제 브라우저에는 두 토큰이 모두 없다.
+          // 카카오톡과 네이버 앱은 OS 를 가리지 않고 막는다. 안드로이드는 위의
+          // 이유로 저장이 아예 안 되고, iOS 는 앱이 WKDownloadDelegate 를 구현해
+          // 둔 덕에 "지금은" 되지만 앱 업데이트 한 번에 조용히 깨질 수 있어서
+          // 시드를 날릴 위험을 안고 갈 이유가 없다.
+          //
+          // 그 밖의 안드로이드 인앱 웹뷰는 'wv' 토큰으로 잡는다. 안드로이드
+          // 웹뷰가 직접 붙이는 토큰이라 앱 종류와 무관하게 신뢰할 수 있다.
+          //
+          // 브라우저 이름(Whale/ 등)으로 "진짜 브라우저"를 골라내려 하면 안 된다.
+          // 네이버 앱 인앱 브라우저는 웨일 엔진 기반이라 UA 에 Whale/ 을 달고
+          // 나오고, 실제로 그 예외를 뒀더니 막아야 할 네이버 인앱이 그대로
+          // 통과해버렸다. 크롬·삼성 인터넷·웨일은 웹뷰가 아닌 완전한 크로미움
+          // 브라우저라서 'wv' 를 붙이지 않으므로 별도 예외가 필요 없다.
           const ua = navigator.userAgent;
-          // 웨일·삼성 인터넷은 안드로이드에서 'wv' 토큰을 붙이는 버전이 있는데
-          // 둘 다 실제 브라우저라 blob 저장이 정상 동작한다. 인앱 웹뷰로 오인해
-          // 막아버리지 않도록 먼저 제외한다.
-          const isStandaloneBrowser = /Whale\/|SamsungBrowser\//.test(ua);
           const isUnsupportedEnv =
             /KAKAOTALK/i.test(ua) ||
-            (/Android/.test(ua) &&
-              !isStandaloneBrowser &&
-              (/;\s*wv\)/.test(ua) || /NAVER\(inapp/i.test(ua)));
+            /NAVER\(inapp/i.test(ua) ||
+            (/Android/.test(ua) && /;\s*wv\)/.test(ua));
+
+          // ===== 임시 진단용 =====
+          // 네이버 인앱이 왜 판정에 안 걸리는지 보려고 실제 UA 와 각 조건의
+          // 결과를 화면에 띄운다. 원인 확인 후 이 블록과 #uaDebug div 를 지운다.
+          const uaDebugEl = document.getElementById("uaDebug");
+          if (uaDebugEl) {
+            uaDebugEl.textContent =
+              "판정: " +
+              (isUnsupportedEnv ? "차단" : "통과") +
+              "\nAndroid=" +
+              /Android/.test(ua) +
+              "  wv=" +
+              /;\s*wv\)/.test(ua) +
+              "  NAVERinapp=" +
+              /NAVER\(inapp/i.test(ua) +
+              "  kakao=" +
+              /KAKAOTALK/i.test(ua) +
+              "\nUA: " +
+              ua;
+          }
+          // ===== 임시 진단용 끝 =====
 
           const BIP39_WORDS = [
             "abandon",
