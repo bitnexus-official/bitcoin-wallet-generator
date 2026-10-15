@@ -733,10 +733,10 @@
         <div class="container">
           <!-- 생성을 진행하면 안 되는 실행 환경 안내 (JS가 해당 환경에서만 노출) -->
           <div class="env-warn hidden-section" id="envWarn">
-            <strong>카카오톡 화면에서는 지갑을 만들 수 없습니다</strong>
-            카카오톡 안에서는 지갑 정보 파일이 어디에 저장되는지 확인하기
-            어렵고, 의도치 않게 공유될 위험이 있습니다. 아래 주소를 기억한 뒤
-            다시 접속해 주세요.
+            <strong>이 화면에서는 지갑을 만들 수 없습니다</strong>
+            카카오톡·네이버 등 앱 속에 열린 화면에서는 지갑 정보 파일이 기기에
+            저장되지 않거나, 의도치 않게 공유될 위험이 있습니다. 아래 주소를
+            기억한 뒤 다시 접속해 주세요.
             <p
               style="
                 margin: 10px 0;
@@ -2718,7 +2718,29 @@
 
           // 카카오톡 인앱 브라우저는 지갑 정보 파일이 공유 시트를 거쳐 대화방으로
           // 전송되기 쉬워(=시드가 카카오 서버에 평문으로 남는다) 생성 자체를 막는다.
-          const isKakaoInApp = /KAKAOTALK/i.test(navigator.userAgent);
+          //
+          // 안드로이드 인앱 웹뷰(네이버 앱 등)는 파일 저장 자체가 불가능하다.
+          // <a download> 클릭은 앱의 DownloadListener 를 거쳐 안드로이드
+          // DownloadManager 로 넘어가는데, DownloadManager 는 http/https 만 받고
+          // blob:/data: 는 거부한다("Can only download HTTP/HTTPS URIs").
+          // blob 의 바이트는 렌더러 메모리에만 있어서 앱이 읽을 방법이 없다.
+          // 그래서 주소 복사(JS 안에서 끝남)는 되는데 다운로드만 조용히 실패한다.
+          // 크롬·삼성 인터넷(진짜 브라우저)과 iOS(WKWebView)는 blob 을 직접
+          // 저장하므로 해당 없음. 서버 없이 우회할 방법이 없어 생성을 막는다.
+          //
+          // 'wv' 는 안드로이드 웹뷰 UA 토큰이다. 네이버 앱 일부 버전은 이 토큰
+          // 없이 NAVER(inapp 만 붙이므로 두 가지를 모두 본다. 크롬·삼성 인터넷·
+          // 웨일 같은 실제 브라우저에는 두 토큰이 모두 없다.
+          const ua = navigator.userAgent;
+          // 웨일·삼성 인터넷은 안드로이드에서 'wv' 토큰을 붙이는 버전이 있는데
+          // 둘 다 실제 브라우저라 blob 저장이 정상 동작한다. 인앱 웹뷰로 오인해
+          // 막아버리지 않도록 먼저 제외한다.
+          const isStandaloneBrowser = /Whale\/|SamsungBrowser\//.test(ua);
+          const isUnsupportedEnv =
+            /KAKAOTALK/i.test(ua) ||
+            (/Android/.test(ua) &&
+              !isStandaloneBrowser &&
+              (/;\s*wv\)/.test(ua) || /NAVER\(inapp/i.test(ua)));
 
           const BIP39_WORDS = [
             "abandon",
@@ -5413,10 +5435,10 @@
           // 지갑 생성 함수
           async function generateWallet() {
             // 버튼 상태와 별개로 한 번 더 막는다 (외부 스크립트가 disabled를 풀어버리는
-            // 경우에도 카카오톡 인앱에서는 생성되지 않아야 한다).
-            if (isKakaoInApp) {
+            // 경우에도 지원하지 않는 환경에서는 생성되지 않아야 한다).
+            if (isUnsupportedEnv) {
               alert(
-                "카카오톡 안에서는 지갑을 만들 수 없습니다. 다른 브라우저로 열어 주세요.",
+                "앱 안에 열린 이 화면에서는 지갑을 만들 수 없습니다. 크롬, 사파리, 삼성 인터넷 등 브라우저 앱으로 열어 주세요.",
               );
               return;
             }
@@ -6097,62 +6119,20 @@ Do not share the mnemonic phrase or private key with others. The private key was
               });
               const url = URL.createObjectURL(blob);
 
-              const tryAnchorDownload = () => {
+              // a.click() 한 번으로 끝낸다. 예전에는 WebShare / window.open 을
+              // fallback 으로 달아 뒀지만, 분기 조건이던
+              // `typeof a.download !== "undefined"` 는 모든 브라우저에서 항상
+              // true 라서 한 번도 실행되지 않는 죽은 코드였다.
+              // 저장이 실제로 됐는지는 브라우저가 알려주지 않으므로(a.click() 도
+              // 성공을 보장하지 않는다) 사용자에게 직접 확인받고, 확인 전까지는
+              // 니모닉/개인키를 볼 수 있는 상태로 풀어주지 않는다.
+              function attemptDownload() {
                 const a = document.createElement("a");
                 a.href = url;
                 a.download = filename;
-                // 일부 모바일 브라우저는 download 미지원
-                const canDownload = typeof a.download !== "undefined";
-                if (!canDownload) return false;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                return true;
-              };
-
-              const tryWebShare = async () => {
-                try {
-                  const file = new File([blob], filename, {
-                    type: "text/plain",
-                    lastModified: Date.now(),
-                  });
-                  if (
-                    navigator.share &&
-                    navigator.canShare &&
-                    navigator.canShare({ files: [file] })
-                  ) {
-                    await navigator.share({
-                      files: [file],
-                      title: filename,
-                      text: "지갑 정보 파일 - 메신저로 보내지 말고 기기에 저장하세요.",
-                    });
-                    return true;
-                  }
-                } catch (e) {
-                  // 무시하고 다음 fallback 시도
-                }
-                return false;
-              };
-
-              const tryOpenNewTab = () => {
-                const win = window.open(url, "_blank");
-                return !!win;
-              };
-
-              // 브라우저는 다운로드/공유가 실제로 파일 저장까지 이어졌는지 알려주는
-              // 표준적인 방법이 없다(a.click()도, WebShare도 "성공"을 보장하지 않음).
-              // 그래서 자동 시도가 끝나면 항상 사용자에게 직접 확인을 받고,
-              // 확인 전까지는 니모닉/개인키를 볼 수 있는 상태로 풀어주지 않는다.
-              async function attemptDownload() {
-                // 기기에 파일로 저장하는 경로를 항상 먼저 시도한다. 공유 시트(WebShare)는
-                // 사용자가 시드를 메신저로 보내버릴 수 있어 마지막 수단으로만 쓴다.
-                const okAnchor = tryAnchorDownload();
-                if (!okAnchor) {
-                  const okShare = await tryWebShare();
-                  if (!okShare) {
-                    tryOpenNewTab();
-                  }
-                }
 
                 showSaveConfirmModal(
                   () => {
@@ -6194,17 +6174,17 @@ Do not share the mnemonic phrase or private key with others. The private key was
             }
           }
 
-          if (isKakaoInApp) {
+          if (isUnsupportedEnv) {
             const envWarn = document.getElementById("envWarn");
             if (envWarn) envWarn.classList.remove("hidden-section");
           }
 
           // 동의 체크박스: 체크 시 생성 버튼 활성화
           const agreeCheck = document.getElementById("agreeCheck");
-          if (isKakaoInApp && agreeCheck) agreeCheck.disabled = true;
+          if (isUnsupportedEnv && agreeCheck) agreeCheck.disabled = true;
           bindOnce(agreeCheck, "change", function () {
             const genBtn = document.getElementById("generateBtn");
-            genBtn.disabled = isKakaoInApp || !this.checked;
+            genBtn.disabled = isUnsupportedEnv || !this.checked;
           });
 
           // 툴팁: span 안에 div 를 넣으면 브라우저가 DOM 을 고쳐 팝업이 빠져나가
