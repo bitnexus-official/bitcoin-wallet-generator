@@ -735,8 +735,9 @@
           <div class="env-warn hidden-section" id="envWarn">
             <strong>이 화면에서는 지갑을 만들 수 없습니다</strong>
             카카오톡·네이버 등 앱 속에 열린 화면에서는 지갑 정보 파일이 기기에
-            저장되지 않거나, 의도치 않게 공유될 위험이 있습니다. 아래 주소를
-            기억한 뒤 다시 접속해 주세요.
+            저장되지 않거나 의도치 않게 공유될 수 있어, 만들어 둔 지갑을 잃을
+            위험이 큽니다. 아래 주소를 기억한 뒤 브라우저 앱에서 다시 접속해
+            주세요.
             <p
               style="
                 margin: 10px 0;
@@ -760,25 +761,6 @@
               </li>
             </ol>
           </div>
-
-          <!-- ===== 임시 진단용: 원인 확인 후 이 div 와 아래 uaDebug 스크립트를 함께 지운다 ===== -->
-          <div
-            id="uaDebug"
-            style="
-              margin-bottom: 14px;
-              padding: 10px 12px;
-              background: #f1f3f5;
-              border: 1px solid #dee2e6;
-              border-radius: 8px;
-              font-size: 11px;
-              line-height: 1.5;
-              color: #495057;
-              word-break: break-all;
-              white-space: pre-wrap;
-              user-select: all;
-              -webkit-user-select: all;
-            "
-          ></div>
 
           <!-- 지갑 생성 전 안내 (제목 바로 아래) -->
           <div class="consent-box" aria-labelledby="consentInlineTitle">
@@ -2765,27 +2747,6 @@
             /KAKAOTALK/i.test(ua) ||
             /NAVER\(inapp/i.test(ua) ||
             (/Android/.test(ua) && /;\s*wv\)/.test(ua));
-
-          // ===== 임시 진단용 =====
-          // 네이버 인앱이 왜 판정에 안 걸리는지 보려고 실제 UA 와 각 조건의
-          // 결과를 화면에 띄운다. 원인 확인 후 이 블록과 #uaDebug div 를 지운다.
-          const uaDebugEl = document.getElementById("uaDebug");
-          if (uaDebugEl) {
-            uaDebugEl.textContent =
-              "판정: " +
-              (isUnsupportedEnv ? "차단" : "통과") +
-              "\nAndroid=" +
-              /Android/.test(ua) +
-              "  wv=" +
-              /;\s*wv\)/.test(ua) +
-              "  NAVERinapp=" +
-              /NAVER\(inapp/i.test(ua) +
-              "  kakao=" +
-              /KAKAOTALK/i.test(ua) +
-              "\nUA: " +
-              ua;
-          }
-          // ===== 임시 진단용 끝 =====
 
           const BIP39_WORDS = [
             "abandon",
@@ -6142,15 +6103,23 @@
               };
               copyAndToast(currentPublicAddress);
 
-              const content = `BITCOIN WALLET INFO
+              // 윈도우 메모장·엑셀 등은 BOM 없는 UTF-8 텍스트를 CP949 로 추측해서
+              // 열기 때문에 한글이 깨진다. Blob 의 type 에 charset 을 적어도
+              // 저장되는 파일에는 아무 영향이 없다 - 파일은 바이트 덩어리일 뿐이고
+              // HTTP 헤더가 따라가지 않아서, 여는 프로그램이 인코딩을 추측한다.
+              // 그래서 본문 맨 앞에 UTF-8 BOM(EF BB BF)을 직접 박아 둔다.
+              const BOM = "\uFEFF";
+              const content =
+                BOM +
+                `BITCOIN WALLET INFO / 비트코인 지갑 정보
 
-MNEMONIC PHRASE (12 WORDS - BIP84 STANDARD):
+[1] 복구 단어 12개 (MNEMONIC PHRASE - 12 WORDS, BIP84)
 ${currentMnemonic}
 
-PRIVATE KEY (BIP84 ACCOUNT EXTENDED KEY, zprv, m/84'/0'/0'):
+[2] 비밀키 (PRIVATE KEY - BIP84 ACCOUNT EXTENDED KEY, zprv, m/84'/0'/0')
 ${currentPrivateKey}
 
-PUBLIC ADDRESS (MINING ADDRESS):
+[3] 채굴 주소 (PUBLIC ADDRESS - MINING ADDRESS)
 ${currentPublicAddress}
 
 WARNING: Please keep this information safely. If you lose the mnemonic phrase or private key, you will not be able to access your wallet.
