@@ -582,10 +582,21 @@
           line-height: 1.65;
         }
 
+        /* 노란 ⚠️ 이모지는 기기·OS 마다 모양과 크기가 달라 글자와 높이가
+           안 맞았다. 차단 경고(.env-warn-icon)와 같은 SVG 삼각형을 쓴다. */
         .wallet-generator .warning strong {
-          display: block;
+          display: flex;
+          align-items: center;
+          gap: 6px;
           margin-bottom: 5px;
           /* color: #0a58ca; */
+        }
+
+        .wallet-generator .warning-icon {
+          flex-shrink: 0;
+          width: 17px;
+          height: 17px;
+          color: #d92d20;
         }
 
         .wallet-generator .warning-gap-after-save {
@@ -921,7 +932,23 @@
           </div>
 
           <div class="warning hidden-section" id="warningBox">
-            <strong>⚠️ 경고</strong>
+            <strong>
+              <svg
+                class="warning-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+              </svg>
+              경고
+            </strong>
             아래 정보는 보안을 위해
             <span class="bold-emphasis">단 한 번만 표시</span>됩니다.
             <span class="bold-emphasis">반드시 파일로 저장</span>해 두세요.<span
