@@ -651,21 +651,115 @@
           flex-shrink: 0;
         }
 
-        /* 생성을 진행하면 안 되는 실행 환경 (카카오톡 인앱 브라우저 등) */
+        /* 생성을 진행하면 안 되는 실행 환경 (카카오톡·네이버 인앱 브라우저 등).
+           본문까지 빨간 글씨로 칠하면 읽기 힘들고 "다 위험하다"로만 읽힌다.
+           빨강은 왼쪽 띠·아이콘·제목에만 쓰고 본문은 중립 회색으로 둔다. */
         .wallet-generator .env-warn {
-          background: #fdecec;
-          border: 1px solid #f5c2c2;
+          background: #fffbfa;
+          border: 1px solid #fecdca;
+          border-left: 4px solid #d92d20;
           border-radius: 10px;
-          padding: 14px 16px;
-          margin-bottom: 16px;
+          padding: 16px 18px;
+          margin-bottom: 20px;
           font-size: 14px;
-          color: #8a1f1f;
           line-height: 1.65;
+          color: #475467;
         }
 
-        .wallet-generator .env-warn strong {
-          display: block;
-          margin-bottom: 5px;
+        .wallet-generator .env-warn-head {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+
+        .wallet-generator .env-warn-icon {
+          flex-shrink: 0;
+          width: 20px;
+          height: 20px;
+          margin-top: 1px;
+          color: #d92d20;
+        }
+
+        .wallet-generator .env-warn-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #912018;
+          line-height: 1.45;
+        }
+
+        .wallet-generator .env-warn-body {
+          margin: 0 0 14px;
+        }
+
+        /* 주소는 "옮겨 적을 대상"이라 입력칸처럼 보이게 하고, 길게 눌렀을 때
+           한 번에 전체가 선택되도록 user-select: all 을 준다. */
+        .wallet-generator .env-warn-url {
+          padding: 12px 14px;
+          margin-bottom: 14px;
+          background: #fff;
+          border: 1px solid #fda29b;
+          border-radius: 8px;
+          font-family:
+            ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+            "Liberation Mono", monospace;
+          font-size: 15px;
+          font-weight: 700;
+          color: #912018;
+          text-align: center;
+          word-break: break-all;
+          user-select: all;
+          -webkit-user-select: all;
+        }
+
+        /* 기본 ol 마커 대신 원형 번호를 쓴다. .wallet-generator * 가 padding 을
+           0 으로 밀어버려서 기본 마커는 들여쓰기가 깨진 채로 보였다. */
+        .wallet-generator .env-warn-steps {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+          counter-reset: envstep;
+        }
+
+        .wallet-generator .env-warn-steps li {
+          counter-increment: envstep;
+          position: relative;
+          padding-left: 26px;
+          margin-bottom: 6px;
+        }
+
+        .wallet-generator .env-warn-steps li:last-child {
+          margin-bottom: 0;
+        }
+
+        .wallet-generator .env-warn-steps li::before {
+          content: counter(envstep);
+          position: absolute;
+          left: 0;
+          top: 2px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: #fee4e2;
+          color: #912018;
+          font-size: 11px;
+          font-weight: 700;
+          line-height: 18px;
+          text-align: center;
+        }
+
+        /* 사이트에서 눌러야 하는 실제 버튼 이름. 설명 문장과 섞이지 않게
+           버튼처럼 칩으로 표시한다. */
+        .wallet-generator .env-warn-ui {
+          display: inline-block;
+          padding: 1px 6px;
+          border-radius: 5px;
+          background: #f2f4f7;
+          border: 1px solid #e4e7ec;
+          font-size: 13px;
+          font-weight: 600;
+          color: #344054;
+          white-space: nowrap;
         }
 
         /* Consent modal */
@@ -744,32 +838,39 @@
       <div class="wallet-generator">
         <div class="container">
           <!-- 생성을 진행하면 안 되는 실행 환경 안내 (JS가 해당 환경에서만 노출) -->
-          <div class="env-warn hidden-section" id="envWarn">
-            <strong>이 화면에서는 지갑을 만들 수 없습니다</strong>
-            카카오톡·네이버 등 앱 속에 열린 화면에서는 지갑 정보 파일이 기기에
-            저장되지 않거나 의도치 않게 공유될 수 있어, 만들어 둔 지갑을 잃을
-            위험이 큽니다. 아래 주소를 기억한 뒤 브라우저 앱에서 다시 접속해
-            주세요.
-            <p
-              style="
-                margin: 10px 0;
-                font-size: 1.15em;
-                font-weight: 700;
-                text-align: center;
-              "
-            >
-              bitnexus.co.kr/manual
+          <div class="env-warn hidden-section" id="envWarn" role="alert">
+            <div class="env-warn-head">
+              <svg
+                class="env-warn-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+              </svg>
+              <span class="env-warn-title"
+                >이 화면에서는 지갑을 만들 수 없습니다</span
+              >
+            </div>
+            <p class="env-warn-body">
+              카카오톡·네이버 등 앱 속에 열린 화면에서는 지갑 정보 파일이 기기에
+              저장되지 않거나 의도치 않게 공유될 수 있어, 만들어 둔 지갑을 잃을
+              위험이 큽니다. 아래 주소를 브라우저 앱에서 열어 주세요.
             </p>
-            <ol style="margin: 0; padding-left: 20px">
+            <div class="env-warn-url">bitnexus.co.kr/manual</div>
+            <ol class="env-warn-steps">
               <li>이 화면을 닫습니다.</li>
               <li>크롬, 사파리, 삼성 인터넷 등 브라우저 앱을 실행합니다.</li>
               <li>주소창에 위 주소를 입력해 접속합니다.</li>
+              <li><span class="env-warn-ui">사용법 보기</span>를 누릅니다.</li>
               <li>
-                <strong style="display: inline">사용법 보기</strong>를 누릅니다.
-              </li>
-              <li>
-                <strong style="display: inline">개인 지갑 만들기</strong>를
-                누릅니다.
+                <span class="env-warn-ui">개인 지갑 만들기</span>를 누릅니다.
               </li>
             </ol>
           </div>
@@ -6262,6 +6363,17 @@ ${currentPublicAddress}
           if (isUnsupportedEnv) {
             const envWarn = document.getElementById("envWarn");
             if (envWarn) envWarn.classList.remove("hidden-section");
+            // 경고만 남기고 생성 양식은 치운다. "여기서는 못 만든다"고 해놓고
+            // 동의 안내 + 체크박스 + 생성 버튼을 그대로 보여주면, 사용자가
+            // 스크롤해 내려가 체크박스를 눌러보다 왜 안 되는지 헤맨다.
+            // 아래의 disabled 처리와 generateWallet() 가드는 그대로 둔다
+            // (외부 스크립트가 숨김을 풀어도 생성은 막혀야 한다).
+            [".consent-box", ".consent-agree-row", "#generateBtn"].forEach(
+              (sel) => {
+                const el = document.querySelector(sel);
+                if (el) el.classList.add("hidden-section");
+              },
+            );
           }
 
           // 동의 체크박스: 체크 시 생성 버튼 활성화
